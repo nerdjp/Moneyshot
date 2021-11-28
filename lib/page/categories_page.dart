@@ -12,10 +12,24 @@ class CategoriesPage extends StatefulWidget {
 class _CategoriesPageState extends State<CategoriesPage> {
   CategoriesService service = CategoriesService();
   List<Category> categories = [];
+  Category currentCategory = Category('');
   int editingTile = -1;
   TextEditingController categoryEditingController = TextEditingController();
+  late FocusNode myFocusNode;
 
-  void initCategories() {
+  @override
+  void initState() {
+    super.initState();
+    myFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    myFocusNode.dispose();
+    super.dispose();
+  }
+
+  void loadCategories() {
     service.getAll().then((value) => categories = value);
   }
 
@@ -41,10 +55,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: TextButton(
               child: const Icon(Icons.delete),
               onPressed: () {
-                /*Category currentCategory = Category.categories.elementAt(i);
-                if (currentCategory.spendings.isEmpty) {
+                try {
+                  Category currentCategory = categories.elementAt(i);
                   setState(() {
-                    //Category.removeCategory(currentCategory);
+                    service.remove(currentCategory);
+                    loadCategories();
                   });
                   SnackBar snackBar = SnackBar(
                     content: Text(
@@ -59,10 +74,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     ),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                } else {
+                } catch (e) {
                   Fluttertoast.showToast(
                       msg: "You can only delete empty categories");
-                }*/
+                }
               },
             ),
           ),
@@ -76,6 +91,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     categoryEditingController.text = currentCategory.description;
     return ListTile(
       title: TextField(
+        focusNode: myFocusNode,
         controller: categoryEditingController,
         decoration: InputDecoration(
           hintText: currentCategory.description,
@@ -99,10 +115,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
           child: TextButton(
               child: const Icon(Icons.check),
               onPressed: () {
-                /*Category.editCategory(
-                    currentCategory, categoryEditingController.text);*/
+                if (categoryEditingController.text.trim() == '') {
+                  Fluttertoast.showToast(msg: "Description is empty!");
+                  return;
+                }
                 setState(() {
+                  currentCategory.description = categoryEditingController.text;
+                  service.save(currentCategory);
                   editingTile = -1;
+                  loadCategories();
                 });
               }),
         ),
@@ -112,7 +133,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
   @override
   Widget build(BuildContext context) {
-    initCategories();
+    loadCategories();
     return Scaffold(
         body: ListView.builder(
             itemCount: categories.length,
@@ -127,7 +148,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
           child: const Icon(Icons.add),
           onPressed: () {
             setState(() {
-              //Category.createCategory("New Category");
+              currentCategory = Category('');
+              categories.add(currentCategory);
+              editingTile = categories.length - 1;
+              myFocusNode.requestFocus();
             });
           },
         ));

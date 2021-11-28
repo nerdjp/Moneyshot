@@ -8,6 +8,14 @@ class CategoriesService {
     return _repo.getAll();
   }
 
+  void save(Category category) {
+    _repo.save(category);
+  }
+
+  void remove(Category category) {
+    _repo.remove(category);
+  }
+
   /*static void createCategory(String description) async {
     Category temp = Category(description);
     temp.id = await DatabaseHelper.instance.createCategory(temp);
