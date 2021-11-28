@@ -3,6 +3,6 @@
 3    package="com.tekartik.sqflite" >
 4
 5    <uses-sdk android:minSdkVersion="16" />
-5-->/home/nerdjp/.pub-cache/hosted/pub.dartlang.org/sqflite-2.0.0+4/android/src/main/AndroidManifest.xml
+5-->C:\desenv\flutter\flutter_2.5.3\.pub-cache\hosted\pub.dartlang.org\sqflite-2.0.0+4\android\src\main\AndroidManifest.xml
 6
 7</manifest>
