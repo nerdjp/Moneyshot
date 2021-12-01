@@ -5,11 +5,18 @@ class Category extends Entity {
 
   Category(this.description);
 
-  Category.withId(id, this.description);
+  Category.withId(int id, this.description) {
+    super.id = id;
+  }
 
   @override
   Map<String, Object?> toJson() => {
         'id': id,
         'description': description,
       };
+
+  @override
+  String toString() {
+    return '{ id: ${id}, description: ${description} }';
+  }
 }

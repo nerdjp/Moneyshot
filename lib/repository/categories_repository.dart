@@ -14,6 +14,6 @@ class CategoriesRepository extends DatabaseHelper<Category> {
 
   @override
   Category transform(Map<String, Object?> map) {
-    return Category.withId(map['id'], map['description'] as String);
+    return Category.withId(map['id'] as int, map['description'] as String);
   }
 }

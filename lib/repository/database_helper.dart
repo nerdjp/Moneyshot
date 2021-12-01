@@ -76,10 +76,12 @@ abstract class DatabaseHelper<T extends Entity> {
     }
   }
 
-  void remove(T entity) async {
-    if (entity.id == null) return;
-    final db = await database;
-    await db.delete(getTable(), where: 'id = ?', whereArgs: [entity.id]);
+  Future<int> remove(T entity) async {
+    if (entity.id != null) {
+      final db = await database;
+      return db.delete(getTable(), where: 'id = ?', whereArgs: [entity.id]);
+    }
+    return Future.value(0);
   }
 
   Future<T> get(int id) async {
@@ -90,7 +92,7 @@ abstract class DatabaseHelper<T extends Entity> {
 
   Future<List<T>> getAll() async {
     final db = await database;
-    return db.query(getTable()).then((value) {
+    return await db.query(getTable()).then((value) {
       List<T> list = transformAll(value);
       return Future.value(list);
     });

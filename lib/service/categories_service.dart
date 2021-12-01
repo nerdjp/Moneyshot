@@ -8,12 +8,12 @@ class CategoriesService {
     return _repo.getAll();
   }
 
-  void save(Category category) {
+  Future<void> save(Category category) async {
     _repo.save(category);
   }
 
-  void remove(Category category) {
-    _repo.remove(category);
+  Future<int> remove(Category category) {
+    return _repo.remove(category);
   }
 
   /*static void createCategory(String description) async {
