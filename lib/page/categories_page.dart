@@ -21,10 +21,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
   void initState() {
     super.initState();
     myFocusNode = FocusNode();
-    () async {
-      await _loadCategories();
-      setState(() {});
-    }();
+    service.getAll().then((value) {
+      setState(() {
+        categories = value;
+	  });
+	});
   }
 
   @override
@@ -33,18 +34,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
     super.dispose();
   }
 
-  Future<void> _loadCategories() async {
-    categories = await service.getAll();
+  void _save(Category category)  {
+    service.save(category);
   }
 
-  Future<void> _save(Category category) async {
-    await service.save(category);
-    await _loadCategories();
-  }
-
-  Future<void> _delete(Category category) async {
-    await service.remove(category);
-    await _loadCategories();
+  void _delete(Category category)  {
+    service.remove(category).then((value) {
+		categories.remove(category);
+	});
   }
 
   ListTile makeCategoryListTile(int i) {
@@ -68,10 +65,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
             padding: const EdgeInsets.all(8.0),
             child: TextButton(
               child: const Icon(Icons.delete),
-              onPressed: () async {
+              onPressed: () {
                 Category deletedCategory = categories.elementAt(i);
-                Fluttertoast.showToast(msg: "category: ${deletedCategory}");
-                //await _delete(deletedCategory);
+                Fluttertoast.showToast(msg: "category: $deletedCategory");
+                _delete(deletedCategory);
                 setState(() {});
                 /*try {
                   
@@ -117,26 +114,28 @@ class _CategoriesPageState extends State<CategoriesPage> {
           child: TextButton(
               child: const Icon(Icons.cancel),
               onPressed: () {
-                categoryEditingController.clear();
-                editingTile = -1;
-                setState(() {});
+                setState(() {
+					categoryEditingController.clear();
+					categories.remove(currentCategory);
+					editingTile = -1;
+				});
               }),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextButton(
-              child: const Icon(Icons.check),
-              onPressed: () async {
-                if (categoryEditingController.text.trim() == '') {
-                  Fluttertoast.showToast(msg: "Description is empty!");
-                  return;
-                }
-                Category category = categories.elementAt(i);
-                category.description = categoryEditingController.text;
-                await _save(category);
-                editingTile = -1;
-                setState(() {});
-              }),
+            child: const Icon(Icons.check),
+            onPressed: () {
+              if (categoryEditingController.text.trim() == '') {
+                Fluttertoast.showToast(msg: "Description is empty!");
+                return;
+              }
+              currentCategory.description = categoryEditingController.text;
+              _save(currentCategory);
+              editingTile = -1;
+              setState(() {});
+            },
+	      ),
         ),
       ]),
     );
