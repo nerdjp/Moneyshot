@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:moneyshot/entity/category.dart';
 import 'package:moneyshot/entity/spendings.dart';
 import 'package:moneyshot/service/spendings_service.dart';
+import 'package:moneyshot/service/categories_service.dart';
 
 class SpendingsPage extends StatefulWidget {
   const SpendingsPage({Key? key}) : super(key: key);
@@ -10,7 +13,6 @@ class SpendingsPage extends StatefulWidget {
 }
 
 class _SpendingsPageState extends State<SpendingsPage> {
-
   List<Spendings> spendings = [];
 
   @override
@@ -20,27 +22,24 @@ class _SpendingsPageState extends State<SpendingsPage> {
           itemCount: spendings.length,
           padding: const EdgeInsets.all(16.0),
           itemBuilder: (context, i) {
-            List<Spendings> totalSpendings = <Spendings>[];
-            for (int j = 0; j < Category.categories.length; j++) {
-              totalSpendings.addAll(Category.categories.elementAt(j).spendings);
-            }
-            Spendings currentListItem = totalSpendings.elementAt(i);
+            Spendings currentListItem = spendings.elementAt(i);
             return ListTile(
               title: Text(currentListItem.description),
               onLongPress: () {},
             );
           }),
       floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.add),
-          onPressed: () {
-            if (Category.categories.isNotEmpty) {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const AddSpending();
-              })).then((_) => setState(() {}));
-            } else {
-              Fluttertoast.showToast(msg: "Add a category first! ");
-            }
-          }),
+        child: const Icon(Icons.add),
+        onPressed: () {
+          if (Category.categories.isNotEmpty) {
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return const AddSpending();
+            })).then((_) => setState(() {}));
+          } else {
+            Fluttertoast.showToast(msg: "Add a category first! ");
+          }
+        },
+      ),
     );
   }
 }
@@ -227,8 +226,7 @@ class _AddSpendingState extends State<AddSpending> {
               child: const Icon(Icons.check),
               onPressed: () {
                 if (description != null && value != null) {
-                  category?.addSpending(date, description ?? "", value ?? 0,
-                      paymentDate, installments, totalInstallments);
+                  category?.addSpending(date, description ?? "", value ?? 0, paymentDate, installments, totalInstallments);
                   Navigator.pop(context);
                 } else {
                   Fluttertoast.showToast(msg: "Please fill all boxes");
@@ -239,5 +237,5 @@ class _AddSpendingState extends State<AddSpending> {
         ],
       ),
     );
-  }*/
+  }
 }

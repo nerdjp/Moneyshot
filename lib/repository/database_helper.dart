@@ -12,10 +12,7 @@ abstract class DatabaseHelper<T extends Entity> {
   DatabaseHelper();
 
   Future<Database> get database async {
-    if (_database == null) {
-      print('initdb');
-      _database = await _initDB('moneyshot.db');
-    }
+    _database ??= await _initDB('moneyshot.db');
     return _database!;
   }
 
