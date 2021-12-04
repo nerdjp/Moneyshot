@@ -15,7 +15,7 @@ class Category extends Entity {
   Map<String, Object?> toJson() => {
         'id': id,
         'description': description,
-      };
+  };
 
   @override
   String toString() {

@@ -10,8 +10,7 @@ class CategoriesPage extends StatefulWidget {
 }
 
 class _CategoriesPageState extends State<CategoriesPage> {
-  CategoriesService service = CategoriesService();
-  List<Category> categories = [];
+  late CategoriesService service = CategoriesService();
   late Category currentCategory;
   int editingIndex = -1;
   TextEditingController categoryEditingController = TextEditingController();
@@ -21,30 +20,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
   void initState() {
     super.initState();
     myFocusNode = FocusNode();
-    service.getAll().then((value) {
-      setState(() {
-        categories = value;
-		currentCategory = categories.first;
-	  });
-	});
+    service.init().then((value) {
+      setState((){});
+    });
   }
 
   @override
   void dispose() {
     myFocusNode.dispose();
     super.dispose();
-  }
-
-  void _save(Category category)  {
-    service.save(category);
-  }
-
-  void _delete(Category category)  {
-    service.remove(category).then((value) {
-		setState((){
-			categories.remove(category);
-		});
-	});
   }
 
   ListTile makeCategoryListTile(int index) {
@@ -70,22 +54,23 @@ class _CategoriesPageState extends State<CategoriesPage> {
               child: const Icon(Icons.delete),
               onPressed: () {
                 Fluttertoast.showToast(msg: "category: $currentCategory");
-				if(currentCategory.spendings.isEmpty) {
-				  Fluttertoast.showToast(msg: "You can only delete empty categories");
-				  return;
-				}
+                if (currentCategory.spendings.isNotEmpty) {
+                  Fluttertoast.showToast(
+                      msg: "You can only delete empty categories");
+                  return;
+                }
                 setState(() {
-                  _delete(currentCategory);
-				});
+                  service.remove(currentCategory);
+                });
                 SnackBar snackBar = SnackBar(
-                  content: Text("Category ${currentCategory.description.toString()} deleted."),
+                  content: Text(
+                      "Category ${currentCategory.description.toString()} deleted."),
                   action: SnackBarAction(
                     label: 'Undo',
                     onPressed: () async {
                       setState(() {
-				  	    _save(currentCategory);
-						categories.add(currentCategory);
-				  	  });
+                        service.save(currentCategory);
+                      });
                     },
                   ),
                 );
@@ -98,8 +83,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  ListTile makeEditableCategoryListTile() {
+  ListTile makeEditableCategoryListTile(int index) {
+    Category currentCategory = service.categories[index];
     categoryEditingController.text = currentCategory.description;
+
     return ListTile(
       title: TextField(
         focusNode: myFocusNode,
@@ -116,10 +103,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
               child: const Icon(Icons.cancel),
               onPressed: () {
                 setState(() {
-					categoryEditingController.clear();
-					categories.remove(currentCategory);
-					editingIndex = -1;
-				});
+                  categoryEditingController.clear();
+                  editingIndex = -1;
+                  if(currentCategory.id == null) service.categories.remove(currentCategory);
+                });
               }),
         ),
         Padding(
@@ -132,11 +119,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 return;
               }
               currentCategory.description = categoryEditingController.text;
-              _save(currentCategory);
+              service.save(currentCategory);
               editingIndex = -1;
               setState(() {});
             },
-	      ),
+          ),
         ),
       ]),
     );
@@ -146,10 +133,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-          itemCount: categories.length,
+          itemCount: service.categories.length,
           itemBuilder: (context, i) {
+            currentCategory = service.categories[i];
             if (i == editingIndex) {
-              return makeEditableCategoryListTile();
+              return makeEditableCategoryListTile(i);
             } else {
               return makeCategoryListTile(i);
             }
@@ -158,9 +146,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
         child: const Icon(Icons.add),
         onPressed: () {
           setState(() {
+            editingIndex = service.categories.length;
             currentCategory = Category('');
-            categories.add(currentCategory);
-            editingIndex = categories.length - 1;
+            service.categories.add(currentCategory);
             myFocusNode.requestFocus();
           });
         },
