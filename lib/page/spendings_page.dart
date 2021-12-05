@@ -13,6 +13,11 @@ class SpendingsPage extends StatefulWidget {
 }
 
 class _SpendingsPageState extends State<SpendingsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold();
+  }
+/*
   List<Spendings> spendings = [];
 
   @override
@@ -237,5 +242,5 @@ class _AddSpendingState extends State<AddSpending> {
         ],
       ),
     );
-  }
+  }*/
 }
