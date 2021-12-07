@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moneyshot/page/categories_page.dart';
-
-import 'entity/category.dart';
-import 'entity/spendings.dart';
+import 'package:moneyshot/page/spendings_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,11 +16,11 @@ class MoneyShot extends StatefulWidget {
 
 class _MoneyShotState extends State<MoneyShot> {
   int _selectedIndex = 0;
-  final textController = TextEditingController();
+  final _pageController = PageController();
 
   final List<Widget> _homePages = <Widget>[
     const CategoriesPage(),
-    //const SpendingsPage(),
+    const SpendingsPage(),
     const Scaffold(),
   ];
 
@@ -30,20 +28,9 @@ class _MoneyShotState extends State<MoneyShot> {
     if (index < _homePages.length) {
       setState(() {
         _selectedIndex = index;
+        _pageController.jumpToPage(index);
       });
     }
-  }
-
-  void _editText(String text) {
-    setState(() {
-      //_selectedText = text;
-    });
-  }
-
-  @override
-  void dispose() {
-    textController.dispose();
-    super.dispose();
   }
 
   @override
@@ -58,7 +45,15 @@ class _MoneyShotState extends State<MoneyShot> {
         appBar: AppBar(
           title: const Text("MoneyShot"),
         ),
-        body: _homePages.elementAt(_selectedIndex),
+        body: PageView(
+          controller: _pageController,
+          children: _homePages,
+          onPageChanged: (page) {
+            setState((){
+              _selectedIndex = page;
+            });
+          },
+        ),
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
