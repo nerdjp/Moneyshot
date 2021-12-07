@@ -10,30 +10,15 @@ class CategoriesPage extends StatefulWidget {
 }
 
 class _CategoriesPageState extends State<CategoriesPage> {
-  late CategoriesService service = CategoriesService();
-  late Category currentCategory;
-  int editingIndex = -1;
+  CategoriesService service = CategoriesService();
   TextEditingController categoryEditingController = TextEditingController();
-  late FocusNode myFocusNode;
 
-  @override
-  void initState() {
-    super.initState();
-    myFocusNode = FocusNode();
-    service.init().then((value) {
-      setState((){});
-    });
-  }
-
-  @override
-  void dispose() {
-    myFocusNode.dispose();
-    super.dispose();
-  }
-
-  ListTile makeCategoryListTile(int index) {
+  ListTile makeCategoryListTile(BuildContext context, Category currentCategory) {
     return ListTile(
       title: Text(currentCategory.description),
+      onLongPress: () {
+        Fluttertoast.showToast(msg: "category: $currentCategory");
+      },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -42,9 +27,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: TextButton(
               child: const Icon(Icons.edit),
               onPressed: () {
-                editingIndex = index;
-                myFocusNode.requestFocus();
-                setState(() {});
+                callCategoryEditPopup(context, currentCategory);
               },
             ),
           ),
@@ -53,28 +36,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: TextButton(
               child: const Icon(Icons.delete),
               onPressed: () {
-                Fluttertoast.showToast(msg: "category: $currentCategory");
                 if (currentCategory.spendings.isNotEmpty) {
                   Fluttertoast.showToast(
                       msg: "You can only delete empty categories");
                   return;
                 }
-                setState(() {
-                  service.remove(service.categories[index]);
+                showDialog(
+                        context: context,
+                        builder: (_) =>
+                            CategoryDeletePopup(category: currentCategory))
+                    .then((value) {
+                  setState(() {});
                 });
-                SnackBar snackBar = SnackBar(
-                  content: Text(
-                      "Category ${currentCategory.description.toString()} deleted."),
-                  action: SnackBarAction(
-                    label: 'Undo',
-                    onPressed: () async {
-                      setState(() {
-                        service.save(currentCategory);
-                      });
-                    },
-                  ),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               },
             ),
           ),
@@ -83,76 +56,121 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  ListTile makeEditableCategoryListTile(int index) {
-    Category currentCategory = service.categories[index];
-    categoryEditingController.text = currentCategory.description;
-
-    return ListTile(
-      title: TextField(
-        focusNode: myFocusNode,
-        controller: categoryEditingController,
-        decoration: InputDecoration(
-          hintText: currentCategory.description,
-          border: const OutlineInputBorder(),
-        ),
-      ),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextButton(
-              child: const Icon(Icons.cancel),
-              onPressed: () {
-                setState(() {
-                  categoryEditingController.clear();
-                  editingIndex = -1;
-                  if(currentCategory.id == null) service.categories.remove(currentCategory);
-                });
-              }),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextButton(
-            child: const Icon(Icons.check),
-            onPressed: () {
-              if (categoryEditingController.text.trim() == '') {
-                Fluttertoast.showToast(msg: "Description is empty!");
-                return;
-              }
-              currentCategory.description = categoryEditingController.text;
-              service.save(currentCategory);
-              editingIndex = -1;
-              setState(() {});
-            },
-          ),
-        ),
-      ]),
-    );
+  void callCategoryEditPopup(BuildContext context, Category? currentCategory) {
+    showDialog(
+      context: context,
+      builder: (_) => CategoryEditPopup(category: currentCategory)
+    ).then((value) {
+      setState((){});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-          itemCount: service.categories.length,
-          itemBuilder: (context, i) {
-            currentCategory = service.categories[i];
-            if (i == editingIndex) {
-              return makeEditableCategoryListTile(i);
-            } else {
-              return makeCategoryListTile(i);
-            }
-          }),
+      body: FutureBuilder<List<Category>>(
+        future: service.getAll(),
+        builder: (BuildContext context, AsyncSnapshot<List<Category>> categoriesList) {
+          if (!categoriesList.hasData) {
+            return const Center(child: Text('Loading...'));
+          }
+          return categoriesList.data!.isEmpty
+          ? const Center(child: Text('No categories added'))
+          : ListView.builder(
+            itemCount: categoriesList.data!.length,
+            itemBuilder: (context, i) {
+              return makeCategoryListTile(context, categoriesList.data![i]);
+            },
+          );
+        }
+      ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
-          setState(() {
-            editingIndex = service.categories.length;
-            currentCategory = Category('');
-            service.categories.add(currentCategory);
-            myFocusNode.requestFocus();
-          });
+          callCategoryEditPopup(context, null);
         },
       ),
     );
+  }
+}
+
+class CategoryEditPopup extends StatelessWidget {
+  CategoryEditPopup({
+    Key? key,
+    Category? category,
+  }) : super(key: key) {
+    category == null ? _category = Category('') : _category = category;
+  }
+
+  late final Category _category;
+  final TextEditingController _categoryDescription = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _focusNode = FocusNode();
+
+  @override
+  Widget build(BuildContext context) {
+    _categoryDescription.text = _category.description;
+    _focusNode.requestFocus();
+    return AlertDialog(
+      title:
+          Text(_category.description.isEmpty ? "Add Category" : "Edit Category"),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _categoryDescription,
+          focusNode: _focusNode,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Category description cannot be empty';
+            }
+          },
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hintText: _category.description.isEmpty ? "New Category" : _category.description,
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.pop(context)),
+        TextButton(
+          child: Text(_category.description.isEmpty ? "Add" : "Edit"),
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _category.description = _categoryDescription.text;
+              CategoriesService().save(_category);
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class CategoryDeletePopup extends StatelessWidget {
+  const CategoryDeletePopup({
+    Key? key,
+    required this.category,
+  }) : super(key: key);
+
+  final Category category;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+        title: Text("Delete ${category.description}?"),
+        actions: [
+          TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context)),
+          TextButton(
+              child: const Text("Delete"),
+              onPressed: () {
+                CategoriesService().remove(category);
+                Navigator.pop(context);
+              }),
+        ]);
   }
 }
