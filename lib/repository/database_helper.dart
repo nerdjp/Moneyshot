@@ -7,8 +7,6 @@ abstract class DatabaseHelper<T extends Entity> {
 
   String getTable();
 
-  T transform(Map<String, Object?> map);
-
   DatabaseHelper();
 
   Future<Database> get database async {
@@ -28,17 +26,17 @@ abstract class DatabaseHelper<T extends Entity> {
 				description 		TEXT	 		NOT NULL
 			);
 			''');
-    /*await db.execute(
+    await db.execute(
 			'''
 			CREATE TABLE spendings (
-				id 					INTEGER 		NOT NULL  	PRIMARY KEY,
-				description 		TEXT	 		NOT NULL,
-				date 				DATE 			NOT NULL,
-				category_id 		INTEGER 		NOT NULL,
-				value 				REAL 			NOT NULL,
-				date_payment 		DATE,
-				n_installments		INTEGER,
-				nt_installments 	INTEGER
+				id 					    INTEGER 	NOT NULL  	PRIMARY KEY,
+				description 	  TEXT	 		NOT NULL,
+				date 				    INTEGER		NOT NULL,
+				category_id 	  INTEGER 	NOT NULL,
+				value 				  REAL 			NOT NULL,
+				date_payment 		INTEGER,
+				n_installments	INTEGER,
+				nt_installments	INTEGER
 			);
 			'''
 		);
@@ -53,17 +51,16 @@ abstract class DatabaseHelper<T extends Entity> {
 		await db.execute(
 			'''
 			CREATE TABLE details (
-				id 					INTEGER 		NOT NULL  	PRIMARY KEY,
-				planning_id 		INTEGER 		NOT NULL,
-				category_id 		INTEGER 		NOT NULL,
-				percentual_value	REAL 			NOT NULL
+				id                INTEGER 		NOT NULL  	PRIMARY KEY,
+				planning_id 	  	INTEGER 		NOT NULL,
+				category_id 	  	INTEGER 		NOT NULL,
+				percentual_value	REAL  			NOT NULL
 			);
 			'''
-		);*/
+		);
   }
 
   void save(T entity) async {
-    if (getTable() == null) return;
     final db = await database;
     if (entity.id == null) {
       entity.id = await db.insert(getTable(), entity.toJson());
@@ -81,19 +78,24 @@ abstract class DatabaseHelper<T extends Entity> {
     return Future.value(0);
   }
 
-  Future<T> get(int id) async {
+  Future<T> getById(int id) async {
     final db = await database;
-    final map = await db.query(getTable());
-    throw UnimplementedError('Não implementado.');
+    return db.query(getTable(), where: 'id = ?', whereArgs: [id]).then( 
+      (value) {
+        return Future.value(transform(value.first));
+      }
+    );
   }
 
   Future<List<T>> getAll() async {
     final db = await database;
-    return await db.query(getTable()).then((value) {
+    return db.query(getTable()).then((value) {
       List<T> list = transformAll(value);
       return Future.value(list);
     });
   }
+
+  T transform(Map<String, Object?> map);
 
   List<T> transformAll(List<Map<String, Object?>> listMap) {
     List<T> list = [];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moneyshot/page/categories_page.dart';
 import 'package:moneyshot/page/spendings_page.dart';
+import 'package:moneyshot/service/categories_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,15 +18,31 @@ class MoneyShot extends StatefulWidget {
 class _MoneyShotState extends State<MoneyShot> {
   int _selectedIndex = 0;
   final _pageController = PageController();
+  bool _isLoaded = false;
 
-  final List<Widget> _homePages = <Widget>[
+  Future<void> loadData() async {
+    await Future.delayed(const Duration(seconds: 2));
+    await CategoriesService().init();
+  }
+
+  @override
+  void initState() {
+    loadData().then((_) {
+      setState(() {
+        _isLoaded = true;
+      });
+    });
+    super.initState();
+  }
+
+  final List<Widget> _pages = <Widget>[
     const CategoriesPage(),
     const SpendingsPage(),
     const Scaffold(),
   ];
 
   void _onItemTap(int index) {
-    if (index < _homePages.length) {
+    if (index < _pages.length) {
       setState(() {
         _selectedIndex = index;
         _pageController.jumpToPage(index);
@@ -45,15 +62,19 @@ class _MoneyShotState extends State<MoneyShot> {
         appBar: AppBar(
           title: const Text("MoneyShot"),
         ),
-        body: PageView(
-          controller: _pageController,
-          children: _homePages,
-          onPageChanged: (page) {
-            setState((){
-              _selectedIndex = page;
-            });
-          },
-        ),
+        body: _isLoaded
+        ? PageView(
+            controller: _pageController,
+            children: _pages,
+            onPageChanged: (page) {
+              setState((){
+                _selectedIndex = page;
+              });
+            },
+          )
+        : const Center(
+          child: CircularProgressIndicator()
+          ),
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,

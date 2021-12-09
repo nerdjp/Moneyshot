@@ -42,10 +42,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   return;
                 }
                 showDialog(
-                        context: context,
-                        builder: (_) =>
-                            CategoryDeletePopup(category: currentCategory))
-                    .then((value) {
+                  context: context,
+                  builder: (_) =>
+                      CategoryDeletePopup(category: currentCategory),
+                ).then((_) {
                   setState(() {});
                 });
               },
@@ -60,7 +60,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     showDialog(
       context: context,
       builder: (_) => CategoryEditPopup(category: currentCategory)
-    ).then((value) {
+    ).then((_) {
       setState((){});
     });
   }
@@ -68,21 +68,13 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<List<Category>>(
-        future: service.getAll(),
-        builder: (BuildContext context, AsyncSnapshot<List<Category>> categoriesList) {
-          if (!categoriesList.hasData) {
-            return const Center(child: Text('Loading...'));
-          }
-          return categoriesList.data!.isEmpty
-          ? const Center(child: Text('No categories added'))
-          : ListView.builder(
-            itemCount: categoriesList.data!.length,
-            itemBuilder: (context, i) {
-              return makeCategoryListTile(context, categoriesList.data![i]);
-            },
-          );
-        }
+      body: service.getCategories().isEmpty
+      ? const Center(child: Text("No categories added"))
+      : ListView.builder(
+        itemCount: service.totalCategories(),
+        itemBuilder: (context, i) {
+          return makeCategoryListTile(context, service.getCategories()[i]);
+        },
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -112,15 +104,16 @@ class CategoryEditPopup extends StatelessWidget {
     _categoryDescription.text = _category.description;
     _focusNode.requestFocus();
     return AlertDialog(
-      title:
-          Text(_category.description.isEmpty ? "Add Category" : "Edit Category"),
+      title: Text(_category.description.isEmpty 
+                  ? "Add Category"
+                  : "Edit Category" ),
       content: Form(
         key: _formKey,
         child: TextFormField(
           controller: _categoryDescription,
           focusNode: _focusNode,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
+          validator: (description) {
+            if (description == null || description.isEmpty) {
               return 'Category description cannot be empty';
             }
           },
@@ -135,7 +128,7 @@ class CategoryEditPopup extends StatelessWidget {
           child: const Text('Cancel'),
           onPressed: () => Navigator.pop(context)),
         TextButton(
-          child: Text(_category.description.isEmpty ? "Add" : "Edit"),
+          child: const Text("Save"),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               _category.description = _categoryDescription.text;
@@ -160,17 +153,19 @@ class CategoryDeletePopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-        title: Text("Delete ${category.description}?"),
-        actions: [
-          TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.pop(context)),
-          TextButton(
-              child: const Text("Delete"),
-              onPressed: () {
-                CategoriesService().remove(category);
-                Navigator.pop(context);
-              }),
-        ]);
+      title: Text("Delete ${category.description}?"),
+      actions: [
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.pop(context)),
+        TextButton(
+          child: const Text("Delete"),
+          onPressed: () {
+            CategoriesService().remove(category);
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
   }
 }
