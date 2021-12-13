@@ -13,7 +13,6 @@ class SpendingsPage extends StatefulWidget {
 }
 
 class _SpendingsPageState extends State<SpendingsPage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,41 +20,82 @@ class _SpendingsPageState extends State<SpendingsPage> {
           itemCount: SpendingsService().getSpendings().length,
           padding: const EdgeInsets.all(16.0),
           itemBuilder: (context, i) {
-            Spendings currentListItem = SpendingsService().getSpendings().elementAt(i);
-            return ListTile(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      currentListItem.description,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
+            Spendings spending = SpendingsService().getSpendings()[i];
+            return ExpansionTile(
+            title: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                spending.description,
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            subtitle: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    spending.category.description,
+                    style: const TextStyle(color: Colors.grey),
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(DateFormat.yMd().format(spending.date)),
+                ),
+              ],
+            ),
+            trailing: Text(
+              'R\$ ' + spending.value.toStringAsFixed(2),
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            //Expanded widget
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      FieldBox(
+                        title: 'Data de criação',
+                        child: Center(
+                            child: Text(DateFormat.yMd()
+                                .format(spending.date))),
+                      ),
+                      FieldBox(
+                        title: 'Data de pagamento',
                         child: Text(
-                          currentListItem.category.description,
-                          style: const TextStyle(color: Colors.grey),
+                          spending.datePayment == null
+                              ? "Não pago"
+                              : DateFormat.yMd().format(
+                                  spending.datePayment ??
+                                      spending.date),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(DateFormat.yMd().format(currentListItem.date)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FieldBox(
+                        title: 'Parcelas',
+                        child: Text(spending.installment == null
+                            ? 'Não há parcelas'
+                            : spending.installment.toString()),
                       ),
+                      if (spending.totalInstallment != null)
+                        FieldBox(
+                          title: 'Total de parcelas',
+                          child: Text(
+                              spending.totalInstallment.toString()),
+                        ),
                     ],
                   ),
                 ],
               ),
-              trailing: Text(
-                          'R\$ ' + currentListItem.value.toStringAsFixed(2),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-              onLongPress: () { Fluttertoast.showToast(msg: currentListItem.toString()); },
-            );
+            ]);
           }),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -70,6 +110,45 @@ class _SpendingsPageState extends State<SpendingsPage> {
             Fluttertoast.showToast(msg: "Add a category first! ");
           }
         },
+      ),
+    );
+  }
+}
+
+class FieldBox extends StatelessWidget {
+  const FieldBox({
+    required this.child,
+    Key? key,
+    this.flex = 1,
+    this.title = '',
+  }) : super(key: key);
+
+  final Widget child;
+  final int flex;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: flex,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: InputDecorator(
+          expands: false,
+          decoration: InputDecoration(
+            isDense: true,
+            labelText: title,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: Center(
+              child: child,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -97,6 +176,9 @@ class _AddSpendingState extends State<AddSpending> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Add Spending"),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10))),
+      scrollable: true,
       content: Form(
         key: _formKey,
         child: Column(
@@ -110,7 +192,7 @@ class _AddSpendingState extends State<AddSpending> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (desc) {
-                  if(desc == null || desc.isEmpty) {
+                  if (desc == null || desc.isEmpty) {
                     return 'Please fill the description';
                   }
                 },
@@ -273,7 +355,8 @@ class _AddSpendingState extends State<AddSpending> {
           child: const Icon(Icons.check),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              SpendingsService().save(Spendings(date, description, value, category!, paymentDate, installments, totalInstallments));
+              SpendingsService().save(Spendings(date, description, value,
+                  category!, paymentDate, installments, totalInstallments));
               Navigator.pop(context);
             }
           },

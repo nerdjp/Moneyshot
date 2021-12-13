@@ -17,8 +17,8 @@ class SpendingsRepository extends DatabaseHelper<Spendings> {
       map['value'] as double,
       CategoriesService().getCategoryById(map['category_id'] as int),
       map['date_payment'] != null ? DateTime.fromMillisecondsSinceEpoch(map['date_payment'] as int) : null,
-      map['n_installment'] as int?,
-      map['nt_installment'] as int?,
+      map['n_installments'] as int?,
+      map['nt_installments'] as int?,
     );
   }
 }
