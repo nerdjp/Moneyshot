@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moneyshot/page/categories_page.dart';
 import 'package:moneyshot/page/spendings_page.dart';
 import 'package:moneyshot/service/categories_service.dart';
+import 'package:moneyshot/service/spendings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ class _MoneyShotState extends State<MoneyShot> {
   Future<void> loadData() async {
     await Future.delayed(const Duration(seconds: 2));
     await CategoriesService().init();
+    await SpendingsService().init();
   }
 
   @override

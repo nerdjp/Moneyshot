@@ -17,18 +17,21 @@ class Spendings extends Entity {
     isPaid = datePayment != null ? true : false;
   }
 
-  Spendings.withInstallments(this.date, this.description, this.value,
-      this.category, this.installment, this.totalInstallment);
+  Spendings.withId(int id, this.date, this.description, this.value, this.category,
+    this.datePayment, this.installment, this.totalInstallment) {
+    super.id = id;
+    isPaid = datePayment != null ? true : false;
+  }
 
   @override
   Map<String, Object?> toJson() => {
-        '_id': id,
+        'id': id,
         'description': description,
-        'date': date,
+        'date': date.millisecondsSinceEpoch,
         'category_id': category.id,
         'value': value,
-        'date_payment': datePayment?.toIso8601String(),
+        'date_payment': datePayment?.millisecondsSinceEpoch,
         'n_installments': installment,
         'nt_installments': totalInstallment,
-      };
+  };
 }
