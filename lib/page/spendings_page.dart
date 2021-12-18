@@ -17,85 +17,88 @@ class _SpendingsPageState extends State<SpendingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-          itemCount: SpendingsService().getSpendings().length,
-          padding: const EdgeInsets.all(16.0),
-          itemBuilder: (context, i) {
-            Spendings spending = SpendingsService().getSpendings()[i];
-            return ExpansionTile(
-            title: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                spending.description,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
+        itemCount: SpendingsService().getSpendings().length,
+        padding: const EdgeInsets.all(16.0),
+        itemBuilder: (context, i) {
+          Spendings spending = SpendingsService().getSpendings()[i];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: ExpansionTile(
+              title: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  spending.description,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            subtitle: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    spending.category.description,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(DateFormat.yMd().format(spending.date)),
-                ),
-              ],
-            ),
-            trailing: Text(
-              'R\$ ' + spending.value.toStringAsFixed(2),
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            //Expanded widget
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
+              subtitle: Row(
                 children: [
-                  Row(
-                    children: [
-                      FieldBox(
-                        title: 'Data de criação',
-                        child: Center(
-                            child: Text(DateFormat.yMd()
-                                .format(spending.date))),
-                      ),
-                      FieldBox(
-                        title: 'Data de pagamento',
-                        child: Text(
-                          spending.datePayment == null
-                              ? "Não pago"
-                              : DateFormat.yMd().format(
-                                  spending.datePayment ??
-                                      spending.date),
-                        ),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      spending.category.description,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FieldBox(
-                        title: 'Parcelas',
-                        child: Text(spending.installment == null
-                            ? 'Não há parcelas'
-                            : spending.installment.toString()),
-                      ),
-                      if (spending.totalInstallment != null)
-                        FieldBox(
-                          title: 'Total de parcelas',
-                          child: Text(
-                              spending.totalInstallment.toString()),
-                        ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(DateFormat.yMd().format(spending.date)),
                   ),
                 ],
               ),
-            ]);
+              trailing: Text(
+                'R\$ ' + spending.value.toStringAsFixed(2),
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+
+              //Expanded widget
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        FieldBox(
+                          title: 'Data de criação',
+                          child: Center(
+                              child: Text(DateFormat.yMd()
+                                  .format(spending.date))),
+                        ),
+                        FieldBox(
+                          title: 'Data de pagamento',
+                          child: Text(
+                            spending.datePayment == null
+                                ? "Não pago"
+                                : DateFormat.yMd().format(
+                                    spending.datePayment ??
+                                        spending.date),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FieldBox(
+                          title: 'Parcelas',
+                          child: Text(spending.installment == null
+                              ? 'Não há parcelas'
+                              : spending.installment.toString()),
+                        ),
+                        if (spending.totalInstallment != null)
+                          FieldBox(
+                            title: 'Total de parcelas',
+                            child: Text(
+                                spending.totalInstallment.toString()),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ]),
+          );
           }),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -117,15 +120,19 @@ class _SpendingsPageState extends State<SpendingsPage> {
 
 class FieldBox extends StatelessWidget {
   const FieldBox({
-    required this.child,
     Key? key,
-    this.flex = 1,
+    required this.child,
     this.title = '',
+    this.flex = 1,
+    this.padding = 10.0,
+    this.radius = 8.0,
   }) : super(key: key);
 
   final Widget child;
   final int flex;
   final String title;
+  final double padding;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -134,16 +141,13 @@ class FieldBox extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: InputDecorator(
-          expands: false,
           decoration: InputDecoration(
-            isDense: true,
+            isCollapsed: true,
             labelText: title,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
+            border: const OutlineInputBorder(),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            padding: EdgeInsets.all(padding),
             child: Center(
               child: child,
             ),
@@ -205,13 +209,13 @@ class _AddSpendingState extends State<AddSpending> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Expanded(
-                  flex: 3,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButtonFormField(
-                      isExpanded: true,
-                      hint: const Text("Category"),
-                      value: category,
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
                       items: CategoriesService().getCategories().map((category) {
                         return DropdownMenuItem(
                           value: category,
@@ -234,7 +238,6 @@ class _AddSpendingState extends State<AddSpending> {
                   ),
                 ),
                 Expanded(
-                  flex: 2,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextFormField(
@@ -258,52 +261,48 @@ class _AddSpendingState extends State<AddSpending> {
             ),
             Row(
               children: [
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: OutlinedButton(
-                      child: Text(DateFormat.yMd().format(date)),
-                      onPressed: () {
-                        showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1970),
-                          lastDate: DateTime(2041),
-                        ).then((datePicked) {
-                          if (datePicked != null) {
-                            setState(() {
-                              date = datePicked;
-                            });
-                          }
-                        });
-                      },
-                    ),
+                FieldBox(
+                  title: 'Data de Criação',
+                  padding: 0,
+                  child: TextButton(
+                    child: Text(DateFormat.yMd().format(date)),
+                    onPressed: () {
+                      showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1970),
+                        lastDate: DateTime(2041),
+                      ).then((datePicked) {
+                        if (datePicked != null) {
+                          setState(() {
+                            date = datePicked;
+                          });
+                        }
+                      });
+                    },
                   ),
                 ),
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: OutlinedButton(
-                      child: Text(paymentDate == null
-                          ? "Data Pagamento"
-                          : DateFormat.yMd().format(paymentDate ?? date)),
-                      onPressed: () {
-                        showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1970),
-                          lastDate: DateTime(2041),
-                        ).then((datePicked) {
-                          if (datePicked != null) {
-                            setState(() {
-                              paymentDate = datePicked;
-                            });
-                          }
-                        });
-                      },
-                    ),
+                FieldBox(
+                  title: paymentDate == null ? '' : 'Data Pagamento',
+                  padding: 0,
+                  child: TextButton(
+                    child: Text(paymentDate == null
+                        ? "Data Pagamento"
+                        : DateFormat.yMd().format(paymentDate ?? date)),
+                    onPressed: () {
+                      showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1970),
+                        lastDate: DateTime(2041),
+                      ).then((datePicked) {
+                        if (datePicked != null) {
+                          setState(() {
+                            paymentDate = datePicked;
+                          });
+                        }
+                      });
+                    },
                   ),
                 ),
               ],
