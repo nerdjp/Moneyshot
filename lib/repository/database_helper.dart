@@ -26,9 +26,8 @@ abstract class DatabaseHelper<T extends Entity> {
 				description 		TEXT	 		NOT NULL
 			);
 			''');
-    await db.execute(
-			'''
-			CREATE TABLE spendings (
+    await db.execute('''
+			CREATE TABLE expenses (
 				id 					    INTEGER 	NOT NULL  	PRIMARY KEY,
 				description 	  TEXT	 		NOT NULL,
 				date 				    INTEGER		NOT NULL,
@@ -38,26 +37,21 @@ abstract class DatabaseHelper<T extends Entity> {
 				n_installments	INTEGER,
 				nt_installments	INTEGER
 			);
-			'''
-		);
-		await db.execute(
-			'''
+			''');
+    await db.execute('''
 			CREATE TABLE plannings (
 				id 					INTEGER 		NOT NULL  	PRIMARY KEY,
 				value 				REAL 			NOT NULL
 			);
-			'''
-		);
-		await db.execute(
-			'''
+			''');
+    await db.execute('''
 			CREATE TABLE details (
 				id                INTEGER 		NOT NULL  	PRIMARY KEY,
 				planning_id 	  	INTEGER 		NOT NULL,
 				category_id 	  	INTEGER 		NOT NULL,
 				percentual_value	REAL  			NOT NULL
 			);
-			'''
-		);
+			''');
   }
 
   void save(T entity) async {
@@ -80,11 +74,9 @@ abstract class DatabaseHelper<T extends Entity> {
 
   Future<T> getById(int id) async {
     final db = await database;
-    return db.query(getTable(), where: 'id = ?', whereArgs: [id]).then( 
-      (value) {
-        return Future.value(transform(value.first));
-      }
-    );
+    return db.query(getTable(), where: 'id = ?', whereArgs: [id]).then((value) {
+      return Future.value(transform(value.first));
+    });
   }
 
   Future<List<T>> getAll() async {

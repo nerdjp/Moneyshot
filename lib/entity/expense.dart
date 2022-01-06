@@ -2,7 +2,7 @@ import 'dart:core';
 import 'package:moneyshot/entity/category.dart';
 import 'entity.dart';
 
-class Spendings extends Entity {
+class Expense extends Entity {
   String description;
   DateTime date;
   Category category;
@@ -12,13 +12,13 @@ class Spendings extends Entity {
   int? totalInstallment;
   bool isPaid = false;
 
-  Spendings(this.date, this.description, this.value, this.category,
-    this.datePayment, this.installment, this.totalInstallment) {
+  Expense(this.date, this.description, this.value, this.category,
+      this.datePayment, this.installment, this.totalInstallment) {
     isPaid = datePayment != null ? true : false;
   }
 
-  Spendings.withId(int id, this.date, this.description, this.value, this.category,
-    this.datePayment, this.installment, this.totalInstallment) {
+  Expense.withId(int id, this.date, this.description, this.value, this.category,
+      this.datePayment, this.installment, this.totalInstallment) {
     super.id = id;
     isPaid = datePayment != null ? true : false;
   }
@@ -33,5 +33,5 @@ class Spendings extends Entity {
         'date_payment': datePayment?.millisecondsSinceEpoch,
         'n_installments': installment,
         'nt_installments': totalInstallment,
-  };
+      };
 }

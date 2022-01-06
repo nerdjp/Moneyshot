@@ -2,118 +2,153 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:moneyshot/entity/category.dart';
-import 'package:moneyshot/entity/spendings.dart';
-import 'package:moneyshot/service/spendings_service.dart';
+import 'package:moneyshot/entity/expense.dart';
+import 'package:moneyshot/service/expenses_service.dart';
 import 'package:moneyshot/service/categories_service.dart';
 
-class SpendingsPage extends StatefulWidget {
-  const SpendingsPage({Key? key}) : super(key: key);
+class ExpensesPage extends StatefulWidget {
+  const ExpensesPage({Key? key}) : super(key: key);
   @override
-  _SpendingsPageState createState() => _SpendingsPageState();
+  _ExpensesPageState createState() => _ExpensesPageState();
 }
 
-class _SpendingsPageState extends State<SpendingsPage> {
+class _ExpensesPageState extends State<ExpensesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-        itemCount: SpendingsService().getSpendings().length,
-        padding: const EdgeInsets.all(16.0),
-        itemBuilder: (context, i) {
-          Spendings spending = SpendingsService().getSpendings()[i];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: ExpansionTile(
-              title: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  spending.description,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+          itemCount: ExpensesService().getExpenses().length,
+          padding: const EdgeInsets.all(16.0),
+          itemBuilder: (context, i) {
+            Expense expense = ExpensesService().getExpenses()[i];
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: ExpansionTile(
+                title: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    expense.description,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              subtitle: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      spending.category.description,
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(DateFormat.yMd().format(spending.date)),
-                  ),
-                ],
-              ),
-              trailing: Text(
-                'R\$ ' + spending.value.toStringAsFixed(2),
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              //Expanded widget
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+                subtitle: Row(
                   children: [
-                    Row(
-                      children: [
-                        FieldBox(
-                          title: 'Data de criação',
-                          child: Center(
-                              child: Text(DateFormat.yMd()
-                                  .format(spending.date))),
-                        ),
-                        FieldBox(
-                          title: 'Data de pagamento',
-                          child: Text(
-                            spending.datePayment == null
-                                ? "Não pago"
-                                : DateFormat.yMd().format(
-                                    spending.datePayment ??
-                                        spending.date),
-                          ),
-                        ),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        expense.category.description,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FieldBox(
-                          title: 'Parcelas',
-                          child: Text(spending.installment == null
-                              ? 'Não há parcelas'
-                              : spending.installment.toString()),
-                        ),
-                        if (spending.totalInstallment != null)
-                          FieldBox(
-                            title: 'Total de parcelas',
-                            child: Text(
-                                spending.totalInstallment.toString()),
-                          ),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(DateFormat.yMd().format(expense.date)),
                     ),
                   ],
                 ),
-              ]),
-          );
+                trailing: Text(
+                  'R\$ ' + expense.value.toStringAsFixed(2),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                //Expanded widget
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          FieldBox(
+                            title: 'Data de criação',
+                            child: Center(
+                                child: Text(
+                                    DateFormat.yMd().format(expense.date))),
+                          ),
+                          FieldBox(
+                            title: 'Data de pagamento',
+                            child: Text(
+                              expense.datePayment == null
+                                  ? "Não pago"
+                                  : DateFormat.yMd().format(
+                                      expense.datePayment ?? expense.date),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FieldBox(
+                            title: 'Parcelas',
+                            child: Text(expense.installment == null
+                                ? 'Não há parcelas'
+                                : expense.installment.toString()),
+                          ),
+                          if (expense.totalInstallment != null)
+                            FieldBox(
+                              title: 'Total de parcelas',
+                              child: Text(expense.totalInstallment.toString()),
+                            ),
+                        ],
+                      ),
+                      TextButton(
+                        child: const Icon(Icons.delete),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => ExpenseDeletePopup(
+                              expense: expense,
+                            ),
+                          ).then((_) {
+                            setState(() {});
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
           }),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {
           if (CategoriesService().getCategories().isNotEmpty) {
-            showDialog(
-              context: context,
-              builder: (_) => const AddSpending()).then((_) {
-                setState((){});
-              });
+            showDialog(context: context, builder: (_) => const AddExpense())
+                .then((_) {
+              setState(() {});
+            });
           } else {
             Fluttertoast.showToast(msg: "Add a category first! ");
           }
         },
       ),
+    );
+  }
+}
+
+class ExpenseDeletePopup extends StatelessWidget {
+  const ExpenseDeletePopup({Key? key, required this.expense}) : super(key: key);
+  final Expense expense;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Delete ${expense.description}?"),
+      actions: [
+        //TextButton(onPressed: OwO, child: child)
+        TextButton(
+          child: const Text("Delete"),
+          onPressed: () {
+            expense.category.expenses.remove(expense);
+            ExpensesService().remove(expense);
+            Navigator.pop(context);
+          },
+        ),
+      ],
     );
   }
 }
@@ -158,14 +193,14 @@ class FieldBox extends StatelessWidget {
   }
 }
 
-class AddSpending extends StatefulWidget {
-  const AddSpending({Key? key}) : super(key: key);
+class AddExpense extends StatefulWidget {
+  const AddExpense({Key? key}) : super(key: key);
 
   @override
-  State<AddSpending> createState() => _AddSpendingState();
+  State<AddExpense> createState() => _AddExpenseState();
 }
 
-class _AddSpendingState extends State<AddSpending> {
+class _AddExpenseState extends State<AddExpense> {
   DateTime date = DateTime.now();
   late String description;
   late double value;
@@ -179,7 +214,7 @@ class _AddSpendingState extends State<AddSpending> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Add Spending"),
+      title: const Text("Add Expense"),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(10))),
       scrollable: true,
@@ -216,14 +251,15 @@ class _AddSpendingState extends State<AddSpending> {
                         labelText: 'Category',
                         border: OutlineInputBorder(),
                       ),
-                      items: CategoriesService().getCategories().map((category) {
+                      items:
+                          CategoriesService().getCategories().map((category) {
                         return DropdownMenuItem(
                           value: category,
                           child: Text(category.description),
                         );
                       }).toList(),
                       validator: (value) {
-                        if(value == null) {
+                        if (value == null) {
                           return 'Please pick a category';
                         }
                       },
@@ -247,7 +283,7 @@ class _AddSpendingState extends State<AddSpending> {
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if(value == null || value.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Please fill the price';
                         }
                       },
@@ -354,7 +390,7 @@ class _AddSpendingState extends State<AddSpending> {
           child: const Icon(Icons.check),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              SpendingsService().save(Spendings(date, description, value,
+              ExpensesService().save(Expense(date, description, value,
                   category!, paymentDate, installments, totalInstallments));
               Navigator.pop(context);
             }

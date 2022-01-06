@@ -1,10 +1,11 @@
 import 'package:moneyshot/entity/category.dart';
-import 'package:moneyshot/entity/spendings.dart';
+import 'package:moneyshot/entity/expense.dart';
 import 'package:moneyshot/repository/categories_repository.dart';
 
 class CategoriesService {
   final CategoriesRepository _repo = CategoriesRepository();
-  static final CategoriesService _instance = CategoriesService._privateConstructor();
+  static final CategoriesService _instance =
+      CategoriesService._privateConstructor();
   List<Category> _categories = [];
 
   factory CategoriesService() => _instance;
@@ -30,7 +31,7 @@ class CategoriesService {
   }
 
   void save(Category newCategory) {
-    if(newCategory.id == null) {
+    if (newCategory.id == null) {
       _categories.add(newCategory);
     }
     _repo.save(newCategory);
@@ -45,9 +46,10 @@ class CategoriesService {
     return _categories.length;
   }
 
-  addSpending(Category category, Spendings spending) {
-    if(!category.spendings.contains(spending)) {
-      category.spendings.add(spending);
+  addSpending(Category category, Expense spending) {
+    if (!category.expenses.contains(spending)) {
+      category.expenses.add(spending);
+      category.totalValue += spending.value;
     }
   }
 }

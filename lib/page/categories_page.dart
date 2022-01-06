@@ -13,7 +13,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
   CategoriesService service = CategoriesService();
   TextEditingController categoryEditingController = TextEditingController();
 
-  ListTile makeCategoryListTile(BuildContext context, Category currentCategory) {
+  ListTile makeCategoryListTile(
+      BuildContext context, Category currentCategory) {
     return ListTile(
       title: Text(currentCategory.description),
       onLongPress: () {
@@ -27,7 +28,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: TextButton(
               child: const Icon(Icons.edit),
               onPressed: () {
-                callCategoryEditPopup(context, currentCategory);
+                showDialog(
+                    context: context,
+                    builder: (_) =>
+                        CategoryEditPopup(category: currentCategory)).then((_) {
+                  setState(() {});
+                });
               },
             ),
           ),
@@ -36,7 +42,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: TextButton(
               child: const Icon(Icons.delete),
               onPressed: () {
-                if (currentCategory.spendings.isNotEmpty) {
+                if (currentCategory.expenses.isNotEmpty) {
                   Fluttertoast.showToast(
                       msg: "You can only delete empty categories");
                   return;
@@ -56,30 +62,25 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  void callCategoryEditPopup(BuildContext context, Category? currentCategory) {
-    showDialog(
-      context: context,
-      builder: (_) => CategoryEditPopup(category: currentCategory)
-    ).then((_) {
-      setState((){});
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: service.getCategories().isEmpty
-      ? const Center(child: Text("No categories added"))
-      : ListView.builder(
-        itemCount: service.totalCategories(),
-        itemBuilder: (context, i) {
-          return makeCategoryListTile(context, service.getCategories()[i]);
-        },
-      ),
+          ? const Center(child: Text("No categories added"))
+          : ListView.builder(
+              itemCount: service.totalCategories(),
+              itemBuilder: (context, i) {
+                return makeCategoryListTile(
+                    context, service.getCategories()[i]);
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
-          callCategoryEditPopup(context, null);
+          showDialog(context: context, builder: (_) => CategoryEditPopup())
+              .then((_) {
+            setState(() {});
+          });
         },
       ),
     );
@@ -104,9 +105,8 @@ class CategoryEditPopup extends StatelessWidget {
     _categoryDescription.text = _category.description;
     _focusNode.requestFocus();
     return AlertDialog(
-      title: Text(_category.description.isEmpty 
-                  ? "Add Category"
-                  : "Edit Category" ),
+      title: Text(
+          _category.description.isEmpty ? "Add Category" : "Edit Category"),
       content: Form(
         key: _formKey,
         child: TextFormField(
@@ -119,14 +119,16 @@ class CategoryEditPopup extends StatelessWidget {
           },
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
-            hintText: _category.description.isEmpty ? "New Category" : _category.description,
+            hintText: _category.description.isEmpty
+                ? "New Category"
+                : _category.description,
           ),
         ),
       ),
       actions: [
         TextButton(
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.pop(context)),
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context)),
         TextButton(
           child: const Text("Save"),
           onPressed: () {
@@ -156,8 +158,8 @@ class CategoryDeletePopup extends StatelessWidget {
       title: Text("Delete ${category.description}?"),
       actions: [
         TextButton(
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.pop(context)),
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context)),
         TextButton(
           child: const Text("Delete"),
           onPressed: () {
